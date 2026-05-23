@@ -698,7 +698,7 @@ def handle_message(
     """
     if not db_path:
         try:
-            from config import get_memory_db_path
+            from memory_ai import get_memory_db_path
             db_path = get_memory_db_path("default")
         except ImportError:
             db_path = _MEMORY_DB_PATH

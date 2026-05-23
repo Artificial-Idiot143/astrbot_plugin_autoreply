@@ -7,7 +7,7 @@ from astrbot.api import logger
 from astrbot.api.message_components import At
 
 import auto_reply
-from config import get_memory_db_path
+from memory_ai import get_memory_db_path
 
 
 class AutoReplyPlugin(Star):

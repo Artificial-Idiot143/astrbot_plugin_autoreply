@@ -102,6 +102,27 @@ LLM_MAX_RETRIES = 2
 # 工具函数
 # ============================================================
 
+def get_memory_db_path(chat_key: str) -> str:
+    """
+    根据聊天标识（群ID/私聊QQ号）生成独立的记忆库路径。
+    
+    chat_key 格式:
+        "group_123456789"   → 群聊记忆库
+        "private_987654321" → 私聊记忆库
+        "" / "default"      → 默认记忆库
+    
+    返回: 数据库文件的绝对路径
+    """
+    if not chat_key or chat_key == "default":
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "memory.db")
+    safe_key = "".join(c for c in chat_key if c.isalnum() or c == '_')
+    if not safe_key:
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "memory.db")
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                       "memory_" + safe_key + ".db")
+
 def _is_pure_emoji(text: str) -> bool:
     """
     判断消息是否为纯表情/无意义符号。
