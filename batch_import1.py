@@ -165,6 +165,7 @@ def _call_llm(system: str, user: str, max_tokens: int = 8192, temperature: float
                 },
                 headers=headers,
                 timeout=LLM_TIMEOUT,
+                verify=False,
             )
             resp.raise_for_status()
             return resp.json()["choices"][0]["message"]["content"].strip()

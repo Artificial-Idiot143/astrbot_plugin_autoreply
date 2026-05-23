@@ -116,7 +116,7 @@ def _call_llm(
     last_error = ""
     for attempt in range(max_retries + 1):
         try:
-            resp = requests.post(LLM_API_URL, json=payload, headers=headers, timeout=timeout)
+            resp = requests.post(LLM_API_URL, json=payload, headers=headers, timeout=timeout, verify=False)
             resp.raise_for_status()
             data = resp.json()
             message = data["choices"][0]["message"]

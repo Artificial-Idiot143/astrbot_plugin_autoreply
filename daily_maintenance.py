@@ -533,7 +533,7 @@ def _call_llm(system_prompt: str, user_prompt: str, max_tokens: int = 8192) -> s
 
     for attempt in range(LLM_MAX_RETRIES + 1):
         try:
-            resp = requests.post(LLM_API_URL, json=payload, headers=headers, timeout=LLM_TIMEOUT)
+            resp = requests.post(LLM_API_URL, json=payload, headers=headers, timeout=LLM_TIMEOUT, verify=False)
             resp.raise_for_status()
             data = resp.json()
             message = data["choices"][0]["message"]

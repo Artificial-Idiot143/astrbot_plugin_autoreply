@@ -35,7 +35,7 @@ try:
     if LLM_API_KEY:
         headers["Authorization"] = f"Bearer {LLM_API_KEY}"
     
-    resp = requests.post(LLM_API_URL, json=payload, headers=headers, timeout=15)
+    resp = requests.post(LLM_API_URL, json=payload, headers=headers, timeout=15, verify=False)
     print(f"状态码: {resp.status_code}")
     if resp.status_code == 200:
         data = resp.json()
@@ -91,7 +91,7 @@ try:
     if LLM_API_KEY:
         headers["Authorization"] = f"Bearer {LLM_API_KEY}"
     
-    resp = requests.post(LLM_API_URL, json=payload, headers=headers, timeout=30)
+    resp = requests.post(LLM_API_URL, json=payload, headers=headers, timeout=30, verify=False)
     print(f"状态码: {resp.status_code}")
     
     if resp.status_code == 200:

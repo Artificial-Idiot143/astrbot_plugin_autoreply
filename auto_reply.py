@@ -92,7 +92,7 @@ def _call_llm(
     for attempt in range(LLM_MAX_RETRIES + 1):
         try:
             resp = requests.post(
-                LLM_API_URL, json=payload, headers=headers, timeout=LLM_TIMEOUT
+                LLM_API_URL, json=payload, headers=headers, timeout=LLM_TIMEOUT, verify=False
             )
             resp.raise_for_status()
             data = resp.json()

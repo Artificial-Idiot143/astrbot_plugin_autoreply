@@ -220,6 +220,7 @@ def _call_llm_api(system_prompt: str, user_prompt: str) -> str:
                 json=payload,
                 headers=headers,
                 timeout=LLM_TIMEOUT,
+                verify=False,
             )
             resp.raise_for_status()
             data = resp.json()
