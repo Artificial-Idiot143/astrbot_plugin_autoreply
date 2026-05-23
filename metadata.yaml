@@ -1,0 +1,5 @@
+name: autoreply
+desc: 基于大语言模型的群聊自动回复系统，核心为三层分级结构化记忆库
+author: student
+version: 1.0.0
+repo: https://github.com/yourname/astrbot_plugin_autoreply
