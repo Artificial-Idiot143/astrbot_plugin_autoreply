@@ -39,7 +39,8 @@ logger = logging.getLogger("daily_maintenance")
 
 # 从 config.py 导入配置
 try:
-    from config import MEMORY_DB_PATH
+    from config import MEMORY_DB_PATH as _CFG_DB
+    MEMORY_DB_PATH = _CFG_DB if os.path.isabs(_CFG_DB) else os.path.join(os.path.dirname(os.path.abspath(__file__)), _CFG_DB)
 except ImportError:
     MEMORY_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory.db")
     logger.warning("未找到 config.py，使用默认数据库路径。")
