@@ -1837,6 +1837,60 @@ class MemoryDB:
         )
         return results
 
+    def get_recent_messages(
+        self,
+        limit: int = 10,
+        include_merged: bool = True,
+    ) -> List[Dict[str, Any]]:
+        """
+        获取记忆库中最近 N 条消息（按时间倒序）。
+        用作回复生成的上下文注入。
+        """
+        with self._lock:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+
+            if include_merged:
+                cur.execute(
+                    "SELECT m.id, m.content, m.user_name, m.timestamp, m.content_state "
+                    "FROM messages m "
+                    "WHERE m.content_state != 'cleared' AND m.content != '' "
+                    "ORDER BY m.timestamp DESC LIMIT ?",
+                    (limit,),
+                )
+            else:
+                cur.execute(
+                    "SELECT m.id, m.content, m.user_name, m.timestamp, m.content_state "
+                    "FROM messages m "
+                    "WHERE m.content_state = 'original' AND m.content != '' "
+                    "ORDER BY m.timestamp DESC LIMIT ?",
+                    (limit,),
+                )
+
+            rows = cur.fetchall()
+            results = []
+            for row in rows:
+                msg_id = row["id"]
+                cur.execute(
+                    "SELECT keyword FROM keywords WHERE msg_id = ?", (msg_id,)
+                )
+                kw_list = [r[0] for r in cur.fetchall()]
+                results.append({
+                    "msg_id": msg_id,
+                    "content": row["content"],
+                    "user_name": row["user_name"],
+                    "timestamp": row["timestamp"],
+                    "content_state": row["content_state"],
+                    "keywords": kw_list,
+                })
+
+            conn.close()
+
+        results.reverse()
+        logger.info(f"获取最近消息: {len(results)} 条")
+        return results
+
     def get_time_block_context(
         self,
         msg_id: int,

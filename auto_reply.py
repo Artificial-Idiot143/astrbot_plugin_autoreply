@@ -489,6 +489,9 @@ def analyze_question_type(content: str) -> Dict[str, Any]:
         "聊了些什么内容", "聊了什么内容", "聊了些什么话题", "聊了什么话题",
         "都聊了什么", "都聊了些什么", "都聊了些啥", "都聊了啥",
         "在聊什么", "聊的什么", "聊的啥", "聊些什么",
+        "发生了什么", "发生什么", "发生啥", "发生了啥",
+        "怎么回事", "咋回事", "怎么个事",
+        "之前发生", "以前发生", "最近发生",
     ]
     
     is_summary = any(p in content for p in summary_patterns)
@@ -540,12 +543,12 @@ def step3_reply_with_memory(
                 start_time, end_time, limit=30, include_merged=True
             )
         else:
-            # 没有时间范围，取最近的消息
-            references = db.search_by_keyword(["聊天记录"], limit=20, include_merged=True)
+            # 没有时间范围，取最近消息作为参考
+            references = db.get_recent_messages(20)
     else:
         if not useful_keywords:
             logger.info(f"[Step3] 无有用关键词，走直接回复")
-            return step3_reply_direct(content, user_name, chat_style)
+            return step3_reply_direct(content, user_name, chat_style, db)
 
         logger.info(f"[Step3] 关键词搜索，关键词={useful_keywords}")
         references = _query_memory_by_keywords(db, useful_keywords, content, per_keyword=3)
@@ -576,9 +579,20 @@ def step3_reply_with_memory(
             "你是QQ群聊机器人。用1-2句简短中文口语回复。"
             "不要思考，直接输出回复。"
         )
+
+    recent = db.get_recent_messages(10)
+    if recent:
+        recent_text = "\n".join(
+            f"  [{r.get('timestamp', '')[:16]}] {r.get('user_name', '')}: {r.get('content', '')[:60]}"
+            for r in recent
+        )
+        context_part = f"群聊最近的消息：\n{recent_text}"
+    else:
+        context_part = ""
     
     user = (
         f"{user_name} 说：\"{content[:200]}\"\n\n"
+        f"{context_part}\n\n"
         f"{memory_part}\n\n"
         f"{style_part}\n\n"
         f"回复："
@@ -612,11 +626,21 @@ def step3_reply_with_memory(
         return _smart_default_reply(content, no_memory=True)
 
 
-def step3_reply_direct(content: str, user_name: str, chat_style: str) -> str:
+def step3_reply_direct(content: str, user_name: str, chat_style: str, db: MemoryDB) -> str:
     """
-    Step3 分支0：仅根据原消息 + chat_analyze 风格回复。
+    Step3 分支0：仅根据原消息 + 最近消息上下文 + chat_analyze 风格回复。
     """
     style_part = f"语言风格参考：\n{chat_style}" if chat_style else ""
+
+    recent = db.get_recent_messages(10)
+    if recent:
+        recent_text = "\n".join(
+            f"  [{r.get('timestamp', '')[:16]}] {r.get('user_name', '')}: {r.get('content', '')[:60]}"
+            for r in recent
+        )
+        context_part = f"群聊最近的消息：\n{recent_text}"
+    else:
+        context_part = ""
 
     system = (
         "你是QQ群聊机器人。用1-2句简短中文口语回复。"
@@ -624,6 +648,7 @@ def step3_reply_direct(content: str, user_name: str, chat_style: str) -> str:
     )
     user = (
         f"{user_name} 说：\"{content[:200]}\"\n\n"
+        f"{context_part}\n\n"
         f"{style_part}\n\n"
         f"回复："
     )
@@ -698,8 +723,8 @@ def handle_message(
     """
     if not db_path:
         try:
-            from memory_ai import get_memory_db_path
-            db_path = get_memory_db_path("default")
+            from db_router import get_db_path
+            db_path = get_db_path("default")
         except ImportError:
             db_path = _MEMORY_DB_PATH
 
@@ -737,7 +762,7 @@ def handle_message(
     if need_memory:
         reply = step3_reply_with_memory(content, user_name, db, chat_style)
     else:
-        reply = step3_reply_direct(content, user_name, chat_style)
+        reply = step3_reply_direct(content, user_name, chat_style, db)
 
     # ========== Step 4: 存储回复 ==========
     if store_in_memory:

@@ -7,7 +7,7 @@ from astrbot.api import logger
 from astrbot.api.message_components import At
 
 import auto_reply
-from memory_ai import get_memory_db_path
+from db_router import get_db_path
 
 
 class AutoReplyPlugin(Star):
@@ -43,7 +43,7 @@ class AutoReplyPlugin(Star):
 
         group_id = str(msg_obj.group_id) if msg_obj.group_id else "unknown"
         chat_key = f"group_{group_id}"
-        db_path = get_memory_db_path(chat_key)
+        db_path = get_db_path(chat_key)
 
         try:
             reply = await asyncio.to_thread(
@@ -88,7 +88,7 @@ class AutoReplyPlugin(Star):
 
         private_id = user_id if user_id else "unknown"
         chat_key = f"private_{private_id}"
-        db_path = get_memory_db_path(chat_key)
+        db_path = get_db_path(chat_key)
 
         try:
             reply = await asyncio.to_thread(
